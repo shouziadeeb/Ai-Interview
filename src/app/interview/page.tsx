@@ -76,14 +76,7 @@ export default function InterviewPage() {
       </div>
     );
   if (qaPairs[0]?.feedback) {
-    return (
-      <div
-        className="min-h-screen flex items-center  
-    justify-center bg-blue-600 from-blue-900 via-purple-900 to-gray-900 px-2 py-8"
-      >
-        <Feedback qaPairs={qaPairs} loading={isLoading} />
-      </div>
-    );
+    return <Feedback qaPairs={qaPairs} loading={isLoading} />;
   }
   return (
     <div

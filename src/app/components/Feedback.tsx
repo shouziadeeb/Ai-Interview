@@ -7,14 +7,14 @@ import { useInterview } from "../context/InterviewContext";
 function getFeedbackType(feedback: string) {
   if (!feedback)
     return {
-      color: "bg-gray-50 border-gray-200",
+      color: "bg-gray-100 border border-gray-200",
       icon: <Info className="text-gray-400" size={22} />,
       label: "Info",
     };
   if (/good|well|excellent|great|strong|impressive/i.test(feedback)) {
     return {
-      color: "bg-green-50 border-green-200",
-      icon: <CheckCircle className="text-green-500" size={22} />,
+      color: "bg-green-100 border border-green-200",
+      icon: <CheckCircle className="text-green-600" size={22} />,
       label: "Positive",
     };
   }
@@ -24,17 +24,18 @@ function getFeedbackType(feedback: string) {
     )
   ) {
     return {
-      color: "bg-yellow-50 border-yellow-200",
-      icon: <AlertTriangle className="text-yellow-500" size={22} />,
+      color: "bg-yellow-100 border border-yellow-200",
+      icon: <AlertTriangle className="text-yellow-600" size={22} />,
       label: "Suggestion",
     };
   }
   return {
-    color: "bg-gray-50 border-gray-200",
+    color: "bg-gray-100 border border-gray-200",
     icon: <Info className="text-gray-400" size={22} />,
     label: "Info",
   };
 }
+
 interface QA {
   question: string;
   answer: string;
@@ -45,26 +46,30 @@ interface FeedbackProps {
   qaPairs: QA[];
   loading: boolean;
 }
+
 const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
   const router = useRouter();
   const { resetInterview } = useInterview();
 
-  if (loading || !qaPairs || qaPairs.length === 0) {
-    // Skeleton loader
+  const handleRedirect = () => {
+    resetInterview();
+    router.push("/");
+  };
 
+  if (loading || !qaPairs.length) {
     return (
-      <div className="max-w-2xl mx-auto py-8">
-        <h2 className="text-3xl font-bold text-center mb-8 text-white drop-shadow">
+      <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <h2 className="text-4xl font-bold text-center text-white mb-10">
           Your Interview Feedback
         </h2>
-        <div className="space-y-6">
+        <div className="space-y-6 animate-pulse">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-start gap-4 animate-pulse">
-              <div className="w-10 h-10 rounded-full bg-gray-200" />
+            <div key={i} className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-full bg-gray-300" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-1/3" />
-                <div className="h-3 bg-gray-200 rounded w-2/3" />
-                <div className="h-3 bg-gray-100 rounded w-1/2" />
+                <div className="h-4 bg-gray-300 rounded w-1/3" />
+                <div className="h-3 bg-gray-300 rounded w-2/3" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
               </div>
             </div>
           ))}
@@ -72,49 +77,50 @@ const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
       </div>
     );
   }
-  function handleRedirect(): void {
-    resetInterview();
-    router.push("/");
-  }
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-2 md:px-0">
-      <h2 className="text-3xl font-bold text-center mb-8  drop-shadow">
+    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <h2 className="text-4xl font-bold text-center  drop-shadow mb-10">
         Your Interview Feedback
       </h2>
-      <ul className="flex flex-col items-center justify-center ">
+
+      <ul className="space-y-6">
         {qaPairs.map((qa, idx) => {
-          const parts = qa.feedback
-            ? getFeedbackType(qa.feedback)
-            : getFeedbackType("");
+          const style = getFeedbackType(qa.feedback || "");
           return (
-            <li key={idx} className={`mb-10 animate-fadeIn p-4`}>
-              {/*  */}
-              <div
-                className={`p-6 rounded-xl border ${parts.color} shadow bg-yello backdrop-blur-sm `}
-              >
-                <p className="font-semibold text-base text-gray-900 mb-1">
-                  Q{idx + 1}: {qa.question}
-                </p>
-                <p className="mb-2 text-gray-700 text-sm">
-                  Answer: {qa.answer}
-                </p>
-                {qa.feedback && (
-                  <div className="prose prose-sm max-w-none text-gray-800">
-                    <ReactMarkdown>{qa.feedback}</ReactMarkdown>
-                  </div>
-                )}
+            <li
+              key={idx}
+              className={`p-5 rounded-xl ${style.color} shadow-md transition-all`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="mt-1">{style.icon}</div>
+                <div className="flex-1">
+                  <p className="font-semibold text-lg text-gray-900 mb-1">
+                    Q{idx + 1}: {qa.question}
+                  </p>
+                  <p className="text-gray-700 mb-2 text-sm">
+                    <span className="font-medium">Answer:</span> {qa.answer}
+                  </p>
+                  {qa.feedback && (
+                    <div className="prose prose-sm max-w-none text-gray-800">
+                      <ReactMarkdown>{qa.feedback}</ReactMarkdown>
+                    </div>
+                  )}
+                </div>
               </div>
             </li>
           );
         })}
       </ul>
-      <button
-        onClick={handleRedirect}
-        className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-8 py-3 rounded-2xl shadow-md text-lg font-semibold transition-all duration-200 cursor-pointer hover:from-pink-500 hover:to-purple-500 hover:shadow-xl hover:scale-105 active:scale-100 focus:outline-none focus:ring-4 focus:ring-purple-200 disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        Back to home
-      </button>
+
+      <div className="text-center mt-10">
+        <button
+          onClick={handleRedirect}
+          className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white px-8 py-3 rounded-full shadow-lg text-lg font-semibold transition hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-purple-300"
+        >
+          Back to Home
+        </button>
+      </div>
     </div>
   );
 };
