@@ -38,14 +38,11 @@ export default function InterviewPage() {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/feedback`,
-        {
-          method: "POST",
-          body: JSON.stringify({ answers: qaPairs }),
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const res = await fetch(`/api/feedback`, {
+        method: "POST",
+        body: JSON.stringify({ answers: qaPairs }),
+        headers: { "Content-Type": "application/json" },
+      });
       const { feedbacks } = await res.json();
       feedbacks.forEach(
         ({ question, feedback }: { question: string; feedback: string }) => {
