@@ -36,7 +36,7 @@ function getFeedbackType(feedback: string) {
   };
 }
 
-const Feedback = ({ qaPairs, loading }) => {
+const Feedback = ({ qaPairs }: { qaPairs: string }, loading: boolean) => {
   const router = useRouter();
   const { resetInterview } = useInterview();
 
