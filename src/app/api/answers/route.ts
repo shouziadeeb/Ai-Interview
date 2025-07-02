@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-let answers: { id: number; answer: string }[] = [];
+const answers: { id: number; answer: string }[] = [];
 
 export async function POST(req: Request) {
   const body = await req.json();

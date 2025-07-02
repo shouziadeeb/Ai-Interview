@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 interface MicRecorderProps {
   onComplete?: (transcript: string) => void;
-  currentIndex: any;
+  currentIndex: unknown;
 }
 
 export default function MicRecorder({

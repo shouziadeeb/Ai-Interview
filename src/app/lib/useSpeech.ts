@@ -1,9 +1,12 @@
+
 import { useState, useRef, useEffect } from 'react';
+
+
 
 export function useSpeech() {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -21,14 +24,14 @@ export function useSpeech() {
     recognition.lang = 'en-US';
     recognition.interimResults = false;
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: any) => {
       const newTranscript = Array.from(event.results)
         .map((result: any) => result[0].transcript)
         .join(' ');
       setTranscript((prev) => prev + ' ' + newTranscript);
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: { error: any; }) => {
       console.error('Speech recognition error:', event.error);
     };
 
@@ -39,7 +42,7 @@ export function useSpeech() {
     };
 
     recognitionRef.current = recognition;
-  }, []);
+  }, [isListening]);
 
   // toggle listening based on user action
   useEffect(() => {

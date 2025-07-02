@@ -35,8 +35,17 @@ function getFeedbackType(feedback: string) {
     label: "Info",
   };
 }
+interface QA {
+  question: string;
+  answer: string;
+  feedback?: string;
+}
 
-const Feedback = ({ qaPairs }: { qaPairs: string }, loading: boolean) => {
+interface FeedbackProps {
+  qaPairs: QA[];
+  loading: boolean;
+}
+const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
   const router = useRouter();
   const { resetInterview } = useInterview();
 
@@ -63,9 +72,7 @@ const Feedback = ({ qaPairs }: { qaPairs: string }, loading: boolean) => {
       </div>
     );
   }
-  function handleRedirect(
-    _event: MouseEvent<HTMLButtonElement, MouseEvent>
-  ): void {
+  function handleRedirect(): void {
     resetInterview();
     router.push("/");
   }
