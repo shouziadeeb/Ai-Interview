@@ -90,7 +90,7 @@ const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
           return (
             <li
               key={idx}
-              className={`p-5 rounded-xl ${style.color} shadow-md transition-all`}
+              className={`p-4 rounded-xl ${style.color} shadow-md transition-all`}
             >
               <div className="flex items-start gap-3">
                 <div className="mt-1">{style.icon}</div>

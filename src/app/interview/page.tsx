@@ -105,9 +105,20 @@ export default function InterviewPage() {
           <QuestionCard question={questions[currentIndex]?.question} />
         </div>
         {/* Mic Recorder */}
-        <div className="w-full">
-          <MicRecorder onComplete={setAnswer} currentIndex={currentIndex} />
-        </div>
+        {currentIndex !== questions.length ? (
+          <p className="text-2xl font-bold text-white drop-shadow mt-4">
+            {questions.length}/{currentIndex + 1}
+          </p>
+        ) : (
+          <p className="text-2xl font-bold text-white drop-shadow mt-4">
+            All Questions Done
+          </p>
+        )}
+        {currentIndex !== questions.length && (
+          <div className="w-full">
+            <MicRecorder onComplete={setAnswer} currentIndex={currentIndex} />
+          </div>
+        )}
         {/* Navigation Buttons */}
         <div className="flex flex-col md:flex-row gap-4 justify-center items-center mt-6 w-full">
           {currentIndex !== questions.length && (
@@ -115,17 +126,20 @@ export default function InterviewPage() {
               onClick={handleNext}
               className="bg-gradient-to-r from-green-400 via-teal-400 to-blue-400 text-white px-8 py-3 rounded-2xl shadow-md text-lg font-semibold transition-all duration-200 cursor-pointer hover:from-blue-400 hover:to-green-400 hover:shadow-xl hover:scale-105 active:scale-100 focus:outline-none focus:ring-4 focus:ring-green-200"
             >
-              Next Question
+              Submit & Next
             </button>
           )}
-          {currentIndex >= questions.length && (
-            <button
-              onClick={fetchFeedback}
-              disabled={isLoading}
-              className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-8 py-3 rounded-2xl shadow-md text-lg font-semibold transition-all duration-200 cursor-pointer hover:from-pink-500 hover:to-purple-500 hover:shadow-xl hover:scale-105 active:scale-100 focus:outline-none focus:ring-4 focus:ring-purple-200 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Getting Feedback..." : "Get Feedback"}
-            </button>
+          {currentIndex > 0 && (
+            <>
+              <p className="text-md text-gray-200">Get FeedBack Now</p>
+              <button
+                onClick={fetchFeedback}
+                disabled={isLoading}
+                className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-8 py-3 rounded-2xl shadow-md text-lg font-semibold transition-all duration-200 cursor-pointer hover:from-pink-500 hover:to-purple-500 hover:shadow-xl hover:scale-105 active:scale-100 focus:outline-none focus:ring-4 focus:ring-purple-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Getting Feedback..." : "Get Feedback"}
+              </button>
+            </>
           )}
         </div>
       </div>
