@@ -1,18 +1,17 @@
-import { createReadStream } from "fs";
-import { mkdir, unlink, writeFile } from "fs/promises";
-import path from "path";
 import { NextRequest, NextResponse } from "next/server";
+import { toFile } from "groq-sdk";
 import { getGroqClient, GROQ_WHISPER_MODEL } from "@/app/lib/ai/providers";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  let tempPath = "";
-
   try {
-    if (!process.env.GROQ_API_KEY) {
+    if (!process.env.GROQ_API_KEY?.trim()) {
       return NextResponse.json(
-        { error: "GROQ_API_KEY is required for speech-to-text" },
+        {
+          error:
+            "GROQ_API_KEY is missing in this deployment. Add it in Vercel → Settings → Environment Variables, then redeploy.",
+        },
         { status: 500 }
       );
     }
@@ -26,16 +25,20 @@ export async function POST(req: NextRequest) {
 
     const file = audioFile as File;
     const buffer = Buffer.from(await file.arrayBuffer());
-    const extension = (file.name?.split(".").pop() || "webm").toLowerCase();
-    const tempDir = path.join(process.cwd(), ".tmp");
-    tempPath = path.join(tempDir, `transcript-${Date.now()}.${extension}`);
 
-    await mkdir(tempDir, { recursive: true });
-    await writeFile(tempPath, buffer);
+    if (!buffer.length) {
+      return NextResponse.json({ error: "Audio file is empty" }, { status: 400 });
+    }
+
+    const filename = file.name || `answer-${Date.now()}.webm`;
+    // In-memory upload — works on Vercel (no /var/task writes).
+    const upload = await toFile(buffer, filename, {
+      type: file.type || "audio/webm",
+    });
 
     const groq = getGroqClient();
     const transcription = await groq.audio.transcriptions.create({
-      file: createReadStream(tempPath),
+      file: upload,
       model: GROQ_WHISPER_MODEL,
       language: "en",
       temperature: 0.1,
@@ -51,9 +54,5 @@ export async function POST(req: NextRequest) {
     const message =
       error instanceof Error ? error.message : "Unable to transcribe audio right now.";
     return NextResponse.json({ error: message }, { status: 500 });
-  } finally {
-    if (tempPath) {
-      await unlink(tempPath).catch(() => undefined);
-    }
   }
 }
