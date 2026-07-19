@@ -14,6 +14,7 @@ export default function MicRecorder({
   const {
     transcript,
     isListening,
+    isProcessing,
     setTranscript,
     startListening,
     stopListening,
@@ -23,7 +24,7 @@ export default function MicRecorder({
   const [editableTranscript, setEditableTranscript] = useState("");
 
   useEffect(() => {
-    setEditableTranscript(transcript); // update when new speech is captured
+    setEditableTranscript(transcript);
     if (onComplete && transcript) {
       onComplete(transcript);
     }
@@ -32,7 +33,6 @@ export default function MicRecorder({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditableTranscript(e.target.value);
     setTranscript(e.target.value);
-    console.log(e.target.value);
   };
 
   useEffect(() => {
@@ -42,49 +42,71 @@ export default function MicRecorder({
   }, [currentIndex]);
 
   return (
-    <div className="w-full max-w-2xl mx-auto mt-10 p-6 bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 space-y-2 transition-all duration-300">
-      <div className="flex items-center justify-center">
+    <div className="w-full space-y-4">
+      <div className="flex items-center justify-between rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+            Voice response
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            {isListening
+              ? "Recording your response"
+              : isProcessing
+                ? "Transcribing your response"
+                : "Tap the mic to begin speaking"}
+          </p>
+        </div>
+        <div
+          className={`rounded-2xl px-3 py-1 text-sm font-medium ${
+            isListening
+              ? "bg-rose-50 text-rose-700"
+              : isProcessing
+                ? "bg-amber-50 text-amber-700"
+                : "bg-emerald-50 text-emerald-700"
+          }`}
+        >
+          {isListening ? "Live" : isProcessing ? "Processing" : "Ready"}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center py-2">
         <button
           onClick={isListening ? stopListening : startListening}
-          className={`w-14 h-14 flex items-center justify-center rounded-full transition-all duration-300 border-2 border-white shadow-xl ${
+          className={`flex h-16 w-16 items-center justify-center rounded-full transition ${
             isListening
-              ? "bg-gradient-to-tr from-red-500 to-pink-500 animate-pulse"
-              : "bg-gradient-to-tr from-green-500 to-teal-500 hover:scale-105"
+              ? "animate-pulse bg-rose-500"
+              : "bg-[var(--brand)] hover:bg-[var(--brand-deep)]"
           }`}
         >
           {isListening ? (
-            <MicOff size={30} className="text-white" />
+            <MicOff size={28} className="text-white" />
           ) : (
-            <Mic size={30} className="text-white" />
+            <Mic size={28} className="text-white" />
           )}
         </button>
       </div>
 
-      <p className="text-center text-white text-lg">
-        {isListening ? "Recording... Speak clearly" : "Click mic to start"}
-      </p>
-
       <div>
         <label
           htmlFor="transcript"
-          className="text-white block font-semibold mb-2"
+          className="mb-2 block text-sm font-semibold text-slate-800"
         >
-          ✍️ Editable Transcript
+          Editable transcript
         </label>
         <textarea
           id="transcript"
           value={editableTranscript}
           onChange={handleChange}
-          rows={6}
-          className="w-full p-4 bg-white/10 text-white border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-          placeholder="Transcript will appear here..."
+          rows={8}
+          className="min-h-[180px] w-full rounded-[20px] border border-slate-200 bg-white p-4 text-sm leading-7 text-slate-800 outline-none placeholder:text-slate-400 focus:border-[var(--brand)]"
+          placeholder="Your transcript will appear here..."
         />
       </div>
 
-      <div className="text-center space-x-4">
+      <div className="flex justify-center">
         <button
           onClick={resetTranscript}
-          className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 border border-white/20 text-white rounded-full hover:bg-white/20 transition-all duration-200"
+          className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400"
         >
           <RefreshCcw size={18} />
           Clear

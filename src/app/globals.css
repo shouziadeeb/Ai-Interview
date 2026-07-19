@@ -1,5 +1,104 @@
 @import "tailwindcss";
 
+:root {
+  --ink: #0f172a;
+  --muted: #475569;
+  --line: #e2e8f0;
+  --surface: #ffffff;
+  --brand: #1d4ed8;
+  --brand-deep: #1e3a8a;
+  --sky: #dbeafe;
+  --mist: #eff6ff;
+  color-scheme: light;
+}
+
 * {
-  font-family: sans-serif;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  background: #f8fbff;
+  font-family: var(--font-body), "Segoe UI", sans-serif;
+}
+
+h1,
+h2,
+h3,
+.brand-font {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+}
+
+::selection {
+  background: rgba(29, 78, 216, 0.2);
+  color: var(--ink);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes soft-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes wash {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.landing-shell {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(147, 197, 253, 0.55), transparent 32%),
+    radial-gradient(circle at 88% 12%, rgba(191, 219, 254, 0.7), transparent 28%),
+    linear-gradient(180deg, #eef5ff 0%, #f7faff 42%, #ffffff 100%);
+  background-size: 140% 140%;
+  animation: wash 16s ease-in-out infinite;
+}
+
+.rise-in {
+  animation: rise-in 0.8s ease-out both;
+}
+
+.rise-in-delay {
+  animation: rise-in 0.9s ease-out 0.12s both;
+}
+
+.hero-visual {
+  animation: soft-drift 8s ease-in-out infinite;
+}
+
+.site-header {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.soft-panel {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--line);
 }

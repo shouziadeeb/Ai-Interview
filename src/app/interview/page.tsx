@@ -5,145 +5,283 @@ import { useInterview } from "../context/InterviewContext";
 import QuestionCard from "../components/QuestionCard";
 import MicRecorder from "../components/MicRecorder";
 import Feedback from "../components/Feedback";
-import Image from "next/image";
 import Loader from "../components/Loader";
+import SiteShell from "../components/SiteShell";
+import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 
 export default function InterviewPage() {
   type Question = { question: string };
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState("");
-  const { addQAPair, qaPairs, setFeedbackForAnswer } = useInterview();
+  const { addQAPair, qaPairs, applyFeedbacks } = useInterview();
   const [isLoading, setIsLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
 
   useEffect(() => {
-    fetch("/api/questions")
-      .then((res) => res.json())
-      .then(setQuestions);
+    const loadQuestions = async () => {
+      try {
+        const storedAnalysisRaw = window.localStorage.getItem("resumeAnalysis");
+        const analysis = storedAnalysisRaw ? JSON.parse(storedAnalysisRaw) : null;
+
+        if (analysis) {
+          const generated = await fetch("/api/generate-questions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              skills: analysis.skills || [],
+              technologies: analysis.technologies || [],
+              experience: analysis.experience || "",
+              projects: analysis.projects || [],
+            }),
+          });
+
+          if (generated.ok) {
+            const data = await generated.json();
+            if (Array.isArray(data.questions) && data.questions.length > 0) {
+              setQuestions(
+                data.questions.map((item: { question: string }) => ({
+                  question: item.question,
+                }))
+              );
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        console.warn("Personalized question generation failed, using defaults:", error);
+      }
+
+      const res = await fetch("/api/questions");
+      const data = await res.json();
+      setQuestions(data);
+    };
+
+    loadQuestions();
   }, []);
 
   const handleNext = async () => {
     const currentQuestion = questions[currentIndex]?.question;
-    addQAPair({ question: currentQuestion, answer });
+    if (!currentQuestion) return;
+
+    addQAPair({
+      question: currentQuestion,
+      answer: answer.trim() || "No answer provided.",
+    });
     fetch("/api/answers", {
       method: "POST",
       body: JSON.stringify({ question: currentQuestion, answer }),
       headers: { "Content-Type": "application/json" },
     });
     setAnswer("");
+    setFeedbackError("");
     setCurrentIndex((prev) => prev + 1);
   };
 
   const fetchFeedback = async () => {
     if (isLoading) return;
+
+    // Include the in-progress answer if the user requests feedback mid-question.
+    const pairsForReview = [...qaPairs];
+    const activeQuestion = questions[currentIndex]?.question;
+    if (
+      activeQuestion &&
+      answer.trim() &&
+      !pairsForReview.some((pair) => pair.question === activeQuestion)
+    ) {
+      pairsForReview.push({ question: activeQuestion, answer: answer.trim() });
+      addQAPair({ question: activeQuestion, answer: answer.trim() });
+    }
+
+    if (pairsForReview.length === 0) {
+      setFeedbackError("Submit at least one answer before requesting feedback.");
+      return;
+    }
+
     setIsLoading(true);
+    setFeedbackError("");
+
     try {
       const res = await fetch(`/api/feedback`, {
         method: "POST",
-        body: JSON.stringify({ answers: qaPairs }),
+        body: JSON.stringify({
+          answers: pairsForReview.map(({ question, answer: pairAnswer }) => ({
+            question,
+            answer: pairAnswer,
+          })),
+        }),
         headers: { "Content-Type": "application/json" },
       });
-      const { feedbacks } = await res.json();
-      feedbacks.forEach(
-        ({ question, feedback }: { question: string; feedback: string }) => {
-          const index = qaPairs.findIndex((qa) => qa.question === question);
-          if (index !== -1) {
-            setFeedbackForAnswer(index, feedback);
-          }
-        }
-      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || data?.details || "Unable to generate feedback");
+      }
+
+      const feedbacks = Array.isArray(data?.feedbacks) ? data.feedbacks : [];
+      if (!feedbacks.length) {
+        throw new Error("No feedback was returned. Please try again.");
+      }
+
+      applyFeedbacks(feedbacks);
     } catch (err) {
       console.error("Error fetching feedback:", err);
+      setFeedbackError(
+        err instanceof Error ? err.message : "Unable to generate feedback right now."
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!questions.length)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-900 via-purple-900 to-gray-900">
-        <div className="w-full max-w-2xl bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 md:p-12 space-y-8 animate-fadeIn flex flex-col items-center">
-          <div className="flex flex-col items-center space-y-2 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse mb-2" />
-            <div className="h-6 w-40 bg-gray-200 rounded mb-2 animate-pulse" />
-            <div className="h-4 w-64 bg-gray-100 rounded animate-pulse" />
-          </div>
-          <div className="w-full">
-            <div className="h-20 bg-gray-200 rounded-2xl mb-6 animate-pulse" />
-            <div className="h-64 bg-gray-100 rounded-3xl animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
-  if (qaPairs[0]?.feedback) {
+  const hasFeedback = qaPairs.some((pair) => Boolean(pair.feedback));
+  if (hasFeedback) {
     return <Feedback qaPairs={qaPairs} loading={isLoading} />;
   }
+
+  const progressValue = questions.length
+    ? (Math.min(currentIndex, questions.length) / questions.length) * 100
+    : 0;
+  const isSessionComplete = questions.length > 0 && currentIndex >= questions.length;
+  const progressLabel = questions.length
+    ? `${Math.min(currentIndex, questions.length)}/${questions.length}`
+    : "—";
+
   return (
-    <div
-      className="min-h-screen flex items-center  
-    justify-center bg-blue-600 from-blue-900 via-purple-900 to-gray-900 px-2 py-8"
-    >
-      <div className="w-full max-w-2xl bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 md:p-12 space-y-1 animate-fadeIn flex flex-col items-center">
-        {/* Header */}
-        <div className="flex p-6 flex-col items-center space-y-2 mb-4">
-          <Image
-            src="/globe.svg"
-            alt="Interview"
-            width={38}
-            height={38}
-            className="mb-2 animate-bounce"
-          />
-          <h2 className="text-2xl font-bold text-white drop-shadow">
-            Interview Session
-          </h2>
-          <p className="text-md text-gray-200">
-            Answer each question below. Use the mic to record your answer!
-          </p>
-        </div>
-        {/* Question Card */}
-        <div className="w-full">
-          <QuestionCard question={questions[currentIndex]?.question} />
-        </div>
-        {/* Mic Recorder */}
-        {currentIndex !== questions.length ? (
-          <p className="text-2xl font-bold text-white drop-shadow mt-4">
-            {questions.length}/{currentIndex + 1}
-          </p>
-        ) : (
-          <p className="text-2xl font-bold text-white drop-shadow mt-4">
-            All Questions Done
-          </p>
-        )}
-        {currentIndex !== questions.length && (
-          <div className="w-full">
-            <MicRecorder onComplete={setAnswer} currentIndex={currentIndex} />
+    <SiteShell mainClassName="px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6">
+        <section className="soft-panel rounded-[28px] p-6 md:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-[var(--mist)] px-3 py-1 text-sm font-medium text-[var(--brand)]">
+                <Sparkles className="h-4 w-4" />
+                Practice session
+              </div>
+              <h1 className="brand-font mt-4 text-3xl font-semibold text-slate-900 sm:text-4xl">
+                Fine-tune your answers with calm, focused preparation.
+              </h1>
+              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+                Move through realistic questions, record your responses, and build
+                confidence with each step.
+              </p>
+            </div>
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+              <div className="flex items-center justify-between gap-4">
+                <span>Progress</span>
+                <span className="font-semibold text-slate-900">{progressLabel}</span>
+              </div>
+              <div className="mt-3 h-2 w-56 max-w-full rounded-full bg-slate-200">
+                <div
+                  className="h-2 rounded-full bg-[var(--brand)] transition-all"
+                  style={{ width: `${isSessionComplete ? 100 : progressValue}%` }}
+                />
+              </div>
+            </div>
           </div>
+        </section>
+
+        {!questions.length ? (
+          <section className="soft-panel rounded-[28px] p-8 md:p-12">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="h-12 w-12 animate-pulse rounded-2xl bg-slate-200" />
+              <div className="h-6 w-40 animate-pulse rounded-2xl bg-slate-200" />
+              <div className="h-4 w-64 animate-pulse rounded-2xl bg-slate-100" />
+            </div>
+            <div className="mt-8 space-y-4">
+              <div className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+              <div className="h-64 animate-pulse rounded-3xl bg-slate-50" />
+            </div>
+          </section>
+        ) : (
+          <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="soft-panel rounded-[28px] p-6 md:p-8">
+              {isSessionComplete ? (
+                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-6 md:p-8">
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    Session complete
+                  </p>
+                  <p className="brand-font mt-3 text-2xl font-semibold text-slate-900">
+                    You answered {qaPairs.length} question{qaPairs.length === 1 ? "" : "s"}.
+                  </p>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">
+                    Click review feedback to get coaching notes on every answer you submitted.
+                  </p>
+                </div>
+              ) : (
+                <QuestionCard question={questions[currentIndex]?.question} />
+              )}
+
+              <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between text-sm text-slate-600">
+                  <span>Current focus</span>
+                  <span className="font-semibold text-slate-900">
+                    {isSessionComplete
+                      ? "Ready for review"
+                      : `Question ${currentIndex + 1}`}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  Respond clearly, stay structured, and keep your delivery confident.
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                {!isSessionComplete && (
+                  <button
+                    onClick={handleNext}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--brand)] px-6 py-3 text-base font-semibold text-white transition hover:bg-[var(--brand-deep)]"
+                  >
+                    Submit & next <ArrowRight className="h-4 w-4" />
+                  </button>
+                )}
+                {(currentIndex > 0 || isSessionComplete) && (
+                  <button
+                    onClick={fetchFeedback}
+                    disabled={isLoading || qaPairs.length === 0}
+                    className="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3 text-base font-semibold text-slate-800 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isLoading ? "Generating feedback..." : "Get feedback"}
+                  </button>
+                )}
+              </div>
+              {feedbackError ? (
+                <p className="mt-4 text-sm text-rose-600">{feedbackError}</p>
+              ) : null}
+            </div>
+
+            <div className="soft-panel rounded-[28px] p-6 md:p-8">
+              {isSessionComplete ? (
+                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-6 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                    <CheckCircle2 className="h-7 w-7" />
+                  </div>
+                  <h2 className="brand-font mt-5 text-2xl font-semibold text-slate-900">
+                    Interview flow complete
+                  </h2>
+                  <p className="mt-3 text-slate-600">
+                    You have finished the practice set. Review your feedback to sharpen
+                    your delivery.
+                  </p>
+                  <button
+                    onClick={fetchFeedback}
+                    disabled={isLoading || qaPairs.length === 0}
+                    className="mt-6 inline-flex items-center justify-center rounded-2xl bg-[var(--brand)] px-6 py-3 text-base font-semibold text-white transition hover:bg-[var(--brand-deep)] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isLoading ? "Generating feedback..." : "Review feedback"}
+                  </button>
+                  {feedbackError ? (
+                    <p className="mt-4 text-sm text-rose-600">{feedbackError}</p>
+                  ) : null}
+                </div>
+              ) : (
+                <MicRecorder onComplete={setAnswer} currentIndex={currentIndex} />
+              )}
+            </div>
+          </section>
         )}
-        {/* Navigation Buttons */}
-        <div className="flex flex-col md:flex-row gap-4 justify-center items-center mt-6 w-full">
-          {currentIndex !== questions.length && (
-            <button
-              onClick={handleNext}
-              className="bg-gradient-to-r from-green-400 via-teal-400 to-blue-400 text-white px-8 py-3 rounded-2xl shadow-md text-lg font-semibold transition-all duration-200 cursor-pointer hover:from-blue-400 hover:to-green-400 hover:shadow-xl hover:scale-105 active:scale-100 focus:outline-none focus:ring-4 focus:ring-green-200"
-            >
-              Submit & Next
-            </button>
-          )}
-          {currentIndex > 0 && (
-            <>
-              <p className="text-md text-gray-200">Get FeedBack Now</p>
-              <button
-                onClick={fetchFeedback}
-                disabled={isLoading}
-                className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white px-8 py-3 rounded-2xl shadow-md text-lg font-semibold transition-all duration-200 cursor-pointer hover:from-pink-500 hover:to-purple-500 hover:shadow-xl hover:scale-105 active:scale-100 focus:outline-none focus:ring-4 focus:ring-purple-200 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {isLoading ? "Getting Feedback..." : "Get Feedback"}
-              </button>
-            </>
-          )}
-        </div>
       </div>
       {isLoading && <Loader />}
-    </div>
+    </SiteShell>
   );
 }

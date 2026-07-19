@@ -12,6 +12,7 @@ interface InterviewContextType {
   qaPairs: QA[];
   addQAPair: (qa: QA) => void;
   setFeedbackForAnswer: (index: number, feedback: string) => void;
+  applyFeedbacks: (feedbacks: Array<{ question: string; feedback: string }>) => void;
   resetInterview: () => void;
 }
 
@@ -49,9 +50,26 @@ export const InterviewProvider = ({
     });
   };
 
+  const applyFeedbacks = (feedbacks: Array<{ question: string; feedback: string }>) => {
+    setQAPairs((prev) =>
+      prev.map((pair) => {
+        const match = feedbacks.find(
+          (item) => item.question === pair.question && item.feedback
+        );
+        return match ? { ...pair, feedback: match.feedback } : pair;
+      })
+    );
+  };
+
   return (
     <InterviewContext.Provider
-      value={{ qaPairs, addQAPair, setFeedbackForAnswer, resetInterview }}
+      value={{
+        qaPairs,
+        addQAPair,
+        setFeedbackForAnswer,
+        applyFeedbacks,
+        resetInterview,
+      }}
     >
       {children}
     </InterviewContext.Provider>

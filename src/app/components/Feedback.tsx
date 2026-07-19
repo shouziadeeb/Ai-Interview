@@ -1,37 +1,38 @@
 import ReactMarkdown from "react-markdown";
 import React from "react";
-import { CheckCircle, AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, CheckCircle, Info, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useInterview } from "../context/InterviewContext";
+import SiteShell from "./SiteShell";
 
 function getFeedbackType(feedback: string) {
   if (!feedback)
     return {
-      color: "bg-gray-100 border border-gray-200",
-      icon: <Info className="text-gray-400" size={22} />,
+      color: "border-slate-200 bg-slate-50",
+      icon: <Info className="text-slate-500" size={22} />,
       label: "Info",
     };
   if (/good|well|excellent|great|strong|impressive/i.test(feedback)) {
     return {
-      color: "bg-green-100 border border-green-200",
-      icon: <CheckCircle className="text-green-600" size={22} />,
+      color: "border-emerald-200 bg-emerald-50",
+      icon: <CheckCircle className="text-emerald-600" size={22} />,
       label: "Positive",
     };
   }
   if (
     /improve|could|should|suggest|try|consider|weak|missed|lacking/i.test(
-      feedback
+      feedback,
     )
   ) {
     return {
-      color: "bg-yellow-100 border border-yellow-200",
-      icon: <AlertTriangle className="text-yellow-600" size={22} />,
+      color: "border-amber-200 bg-amber-50",
+      icon: <AlertTriangle className="text-amber-600" size={22} />,
       label: "Suggestion",
     };
   }
   return {
-    color: "bg-gray-100 border border-gray-200",
-    icon: <Info className="text-gray-400" size={22} />,
+    color: "border-slate-200 bg-slate-50",
+    icon: <Info className="text-slate-500" size={22} />,
     label: "Info",
   };
 }
@@ -58,70 +59,95 @@ const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
 
   if (loading || !qaPairs.length) {
     return (
-      <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <h2 className="text-4xl font-bold text-center text-white mb-10">
-          Your Interview Feedback
-        </h2>
-        <div className="space-y-6 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-full bg-gray-300" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-300 rounded w-1/3" />
-                <div className="h-3 bg-gray-300 rounded w-2/3" />
-                <div className="h-3 bg-gray-200 rounded w-1/2" />
-              </div>
+      <SiteShell mainClassName="px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="soft-panel rounded-[32px] p-8 md:p-10">
+            <div className="flex items-center justify-center gap-3 text-[var(--brand)]">
+              <Sparkles className="h-5 w-5" />
+              <h2 className="brand-font text-3xl font-semibold text-slate-900">
+                Your interview feedback
+              </h2>
             </div>
-          ))}
+            <div className="mt-8 space-y-4 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-[20px] border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div className="h-4 w-1/3 rounded-2xl bg-slate-200" />
+                  <div className="mt-3 h-3 w-2/3 rounded-2xl bg-slate-100" />
+                  <div className="mt-2 h-3 w-1/2 rounded-2xl bg-slate-100" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      </SiteShell>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <h2 className="text-4xl font-bold text-center  drop-shadow mb-10">
-        Your Interview Feedback
-      </h2>
-
-      <ul className="space-y-6">
-        {qaPairs.map((qa, idx) => {
-          const style = getFeedbackType(qa.feedback || "");
-          return (
-            <li
-              key={idx}
-              className={`p-4 rounded-xl ${style.color} shadow-md transition-all`}
-            >
-              <div className="flex items-start gap-3">
-                <div className="mt-1">{style.icon}</div>
-                <div className="flex-1">
-                  <p className="font-semibold text-lg text-gray-900 mb-1">
-                    Q{idx + 1}: {qa.question}
-                  </p>
-                  <p className="text-gray-700 mb-2 text-sm">
-                    <span className="font-medium">Answer:</span> {qa.answer}
-                  </p>
-                  {qa.feedback && (
-                    <div className="prose prose-sm max-w-none text-gray-800">
-                      <ReactMarkdown>{qa.feedback}</ReactMarkdown>
-                    </div>
-                  )}
-                </div>
+    <SiteShell mainClassName="px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="soft-panel rounded-[32px] p-8 md:p-10">
+          <div className="flex flex-col gap-4 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-[var(--mist)] px-3 py-1 text-sm font-medium text-[var(--brand)]">
+                <Sparkles className="h-4 w-4" />
+                Performance review
               </div>
-            </li>
-          );
-        })}
-      </ul>
+              <h2 className="brand-font mt-4 text-3xl font-semibold text-slate-900">
+                Your interview feedback
+              </h2>
+              <p className="mt-2 text-slate-600">
+                Review your strongest moments and the areas worth refining.
+              </p>
+            </div>
+            <button
+              onClick={handleRedirect}
+              className="rounded-2xl bg-[var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--brand-deep)]"
+            >
+              Back to home
+            </button>
+          </div>
 
-      <div className="text-center mt-10">
-        <button
-          onClick={handleRedirect}
-          className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white px-8 py-3 rounded-full shadow-lg text-lg font-semibold transition hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-purple-300"
-        >
-          Back to Home
-        </button>
+          <ul className="mt-8 space-y-5">
+            {qaPairs.map((qa, idx) => {
+              const style = getFeedbackType(qa.feedback || "");
+              return (
+                <li
+                  key={idx}
+                  className={`rounded-[24px] border p-5 ${style.color}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="mt-1">{style.icon}</div>
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-lg font-semibold text-slate-900">
+                          Q{idx + 1}: {qa.question}
+                        </p>
+                        <span className="rounded-2xl border border-slate-200 bg-white px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-slate-500">
+                          {style.label}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm leading-7 text-slate-700">
+                        <span className="font-medium text-slate-900">Answer:</span>{" "}
+                        {qa.answer}
+                      </p>
+                      {qa.feedback && (
+                        <div className="prose prose-sm mt-4 max-w-none text-slate-600">
+                          <ReactMarkdown>{qa.feedback}</ReactMarkdown>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
-    </div>
+    </SiteShell>
   );
 };
 
