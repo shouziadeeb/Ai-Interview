@@ -84,9 +84,21 @@ export function useSpeech() {
 
   useEffect(() => {
     return () => {
-      clearTimers();
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       streamRef.current?.getTracks().forEach((track) => track.stop());
-      void stopMeter();
+      streamRef.current = null;
+      if (audioContextRef.current) {
+        void audioContextRef.current.close().catch(() => undefined);
+        audioContextRef.current = null;
+      }
+      analyserRef.current = null;
     };
   }, []);
 

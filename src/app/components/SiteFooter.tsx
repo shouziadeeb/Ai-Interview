@@ -43,9 +43,9 @@ export default function SiteFooter() {
           </p>
           <p className="mt-3 text-sm text-[var(--muted)]">
             Created by{" "}
-            <a href="/#about" className="font-semibold text-[var(--ink)] hover:text-[var(--brand)]">
+            <Link href="/#about" className="font-semibold text-[var(--ink)] hover:text-[var(--brand)]">
               Shouzab Farooqui
-            </a>
+            </Link>
           </p>
         </div>
 
