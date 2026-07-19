@@ -1,6 +1,6 @@
 import { useSpeech } from "../lib/useSpeech";
 import { Mic, MicOff, RefreshCcw } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface MicRecorderProps {
   onComplete?: (transcript: string) => void;
@@ -22,6 +22,13 @@ export default function MicRecorder({
   } = useSpeech();
 
   const [editableTranscript, setEditableTranscript] = useState("");
+  const stopListeningRef = useRef(stopListening);
+  const resetTranscriptRef = useRef(resetTranscript);
+
+  useEffect(() => {
+    stopListeningRef.current = stopListening;
+    resetTranscriptRef.current = resetTranscript;
+  }, [stopListening, resetTranscript]);
 
   useEffect(() => {
     setEditableTranscript(transcript);
@@ -37,8 +44,8 @@ export default function MicRecorder({
 
   useEffect(() => {
     setEditableTranscript("");
-    stopListening();
-    resetTranscript();
+    stopListeningRef.current();
+    resetTranscriptRef.current();
   }, [currentIndex]);
 
   return (
