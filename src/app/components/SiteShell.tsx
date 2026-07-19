@@ -10,7 +10,7 @@ export default function SiteShell({
   mainClassName?: string;
 }) {
   return (
-    <div className="landing-shell min-h-screen text-slate-900">
+    <div className="landing-shell min-h-screen text-[var(--ink)]">
       <SiteHeader />
       <main className={mainClassName}>{children}</main>
       <SiteFooter />

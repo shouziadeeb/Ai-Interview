@@ -1,22 +1,29 @@
 import React from "react";
-import { HelpCircle } from "lucide-react";
 
-export default function QuestionCard({ question }: { question: string }) {
+export default function QuestionCard({
+  question,
+  index,
+  total,
+}: {
+  question: string;
+  index?: number;
+  total?: number;
+}) {
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-6 md:p-8">
-      <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[var(--brand)]">
-          <HelpCircle className="h-6 w-6 text-white" />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
-            Current question
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+          Question
+        </p>
+        {index && total ? (
+          <p className="text-xs tabular-nums text-[var(--muted)] opacity-70">
+            {index} of {total}
           </p>
-          <p className="brand-font mt-3 text-xl font-semibold leading-8 text-slate-900 md:text-2xl">
-            {question || "Loading your next question..."}
-          </p>
-        </div>
+        ) : null}
       </div>
+      <p className="brand-font mt-2 text-lg font-semibold leading-7 tracking-tight text-[var(--ink)] sm:text-xl sm:leading-8">
+        {question || "Loading your next question..."}
+      </p>
     </div>
   );
 }

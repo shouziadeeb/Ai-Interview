@@ -1,15 +1,51 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --ink: #0f172a;
   --muted: #475569;
   --line: #e2e8f0;
   --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --surface-elevated: #ffffff;
   --brand: #1d4ed8;
   --brand-deep: #1e3a8a;
   --sky: #dbeafe;
   --mist: #eff6ff;
+  --bg: #f8fbff;
+  --header-bg: rgba(255, 255, 255, 0.72);
+  --overlay: rgba(255, 255, 255, 0.72);
+  --success: #047857;
+  --success-soft: #ecfdf5;
+  --warning: #b45309;
+  --warning-soft: #fffbeb;
+  --danger: #be123c;
+  --danger-soft: #fff1f2;
   color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --ink: #e8eef7;
+  --muted: #9aa8bc;
+  --line: rgba(148, 163, 184, 0.14);
+  --surface: #12171f;
+  --surface-muted: #0e131a;
+  --surface-elevated: #171d27;
+  --brand: #6ba3ff;
+  --brand-deep: #3b82f6;
+  --sky: rgba(59, 130, 246, 0.18);
+  --mist: rgba(59, 130, 246, 0.12);
+  --bg: #080a0f;
+  --header-bg: rgba(10, 12, 18, 0.78);
+  --overlay: rgba(8, 10, 15, 0.72);
+  --success: #34d399;
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --warning: #fbbf24;
+  --warning-soft: rgba(245, 158, 11, 0.12);
+  --danger: #fb7185;
+  --danger-soft: rgba(244, 63, 94, 0.14);
+  color-scheme: dark;
 }
 
 * {
@@ -24,8 +60,9 @@ body {
   margin: 0;
   min-height: 100vh;
   color: var(--ink);
-  background: #f8fbff;
+  background: var(--bg);
   font-family: var(--font-body), "Segoe UI", sans-serif;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 h1,
@@ -38,6 +75,10 @@ h3,
 ::selection {
   background: rgba(29, 78, 216, 0.2);
   color: var(--ink);
+}
+
+[data-theme="dark"] ::selection {
+  background: rgba(107, 163, 255, 0.28);
 }
 
 @keyframes rise-in {
@@ -72,12 +113,24 @@ h3,
 }
 
 .landing-shell {
+  color: var(--ink);
   background:
     radial-gradient(circle at 12% 18%, rgba(147, 197, 253, 0.55), transparent 32%),
     radial-gradient(circle at 88% 12%, rgba(191, 219, 254, 0.7), transparent 28%),
     linear-gradient(180deg, #eef5ff 0%, #f7faff 42%, #ffffff 100%);
   background-size: 140% 140%;
   animation: wash 16s ease-in-out infinite;
+  transition: background 0.3s ease, color 0.25s ease;
+}
+
+[data-theme="dark"] .landing-shell {
+  background:
+    radial-gradient(ellipse 60% 40% at 12% 0%, rgba(59, 130, 246, 0.16), transparent 55%),
+    radial-gradient(ellipse 50% 35% at 90% 8%, rgba(96, 165, 250, 0.1), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 50% 100%, rgba(37, 99, 235, 0.06), transparent 55%),
+    linear-gradient(180deg, #080a0f 0%, #0b0f16 42%, #080a0f 100%);
+  background-size: 100% 100%;
+  animation: none;
 }
 
 .rise-in {
@@ -93,12 +146,68 @@ h3,
 }
 
 .site-header {
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--header-bg);
   backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  border-bottom: 1px solid var(--line);
 }
 
 .soft-panel {
-  background: rgba(255, 255, 255, 0.86);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   border: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+[data-theme="dark"] .soft-panel {
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 12px 40px rgba(0, 0, 0, 0.28);
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.panel-muted {
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+}
+
+@keyframes rec-pulse-ring {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+@keyframes rec-bar-soft {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.rec-ring {
+  animation: rec-pulse-ring 1.4s ease-out infinite;
+}
+
+.rec-ring-delay {
+  animation: rec-pulse-ring 1.4s ease-out 0.35s infinite;
+}
+
+.rec-bar {
+  transition: height 80ms ease-out;
+  animation: rec-bar-soft 1.2s ease-in-out infinite;
 }

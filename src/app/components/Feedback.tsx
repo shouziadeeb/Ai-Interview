@@ -8,31 +8,31 @@ import SiteShell from "./SiteShell";
 function getFeedbackType(feedback: string) {
   if (!feedback)
     return {
-      color: "border-slate-200 bg-slate-50",
-      icon: <Info className="text-slate-500" size={22} />,
+      color: "border-[var(--line)] bg-[var(--surface-muted)]",
+      icon: <Info className="text-[var(--muted)]" size={22} />,
       label: "Info",
     };
   if (/good|well|excellent|great|strong|impressive/i.test(feedback)) {
     return {
-      color: "border-emerald-200 bg-emerald-50",
-      icon: <CheckCircle className="text-emerald-600" size={22} />,
+      color: "border-emerald-500/25 bg-[var(--success-soft)]",
+      icon: <CheckCircle className="text-[var(--success)]" size={22} />,
       label: "Positive",
     };
   }
   if (
     /improve|could|should|suggest|try|consider|weak|missed|lacking/i.test(
-      feedback,
+      feedback
     )
   ) {
     return {
-      color: "border-amber-200 bg-amber-50",
-      icon: <AlertTriangle className="text-amber-600" size={22} />,
+      color: "border-amber-500/25 bg-[var(--warning-soft)]",
+      icon: <AlertTriangle className="text-[var(--warning)]" size={22} />,
       label: "Suggestion",
     };
   }
   return {
-    color: "border-slate-200 bg-slate-50",
-    icon: <Info className="text-slate-500" size={22} />,
+    color: "border-[var(--line)] bg-[var(--surface-muted)]",
+    icon: <Info className="text-[var(--muted)]" size={22} />,
     label: "Info",
   };
 }
@@ -64,7 +64,7 @@ const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
           <div className="soft-panel rounded-[32px] p-8 md:p-10">
             <div className="flex items-center justify-center gap-3 text-[var(--brand)]">
               <Sparkles className="h-5 w-5" />
-              <h2 className="brand-font text-3xl font-semibold text-slate-900">
+              <h2 className="brand-font text-3xl font-semibold text-[var(--ink)]">
                 Your interview feedback
               </h2>
             </div>
@@ -72,11 +72,11 @@ const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="rounded-[20px] border border-slate-200 bg-slate-50 p-4"
+                  className="rounded-[20px] border border-[var(--line)] bg-[var(--surface-muted)] p-4"
                 >
-                  <div className="h-4 w-1/3 rounded-2xl bg-slate-200" />
-                  <div className="mt-3 h-3 w-2/3 rounded-2xl bg-slate-100" />
-                  <div className="mt-2 h-3 w-1/2 rounded-2xl bg-slate-100" />
+                  <div className="h-4 w-1/3 rounded-2xl bg-[var(--line)]" />
+                  <div className="mt-3 h-3 w-2/3 rounded-2xl bg-[var(--line)] opacity-70" />
+                  <div className="mt-2 h-3 w-1/2 rounded-2xl bg-[var(--line)] opacity-50" />
                 </div>
               ))}
             </div>
@@ -92,14 +92,14 @@ const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
         <div className="soft-panel rounded-[32px] p-8 md:p-10">
           <div className="flex flex-col gap-4 text-center sm:flex-row sm:items-end sm:justify-between sm:text-left">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-[var(--mist)] px-3 py-1 text-sm font-medium text-[var(--brand)]">
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--mist)] px-3 py-1 text-sm font-medium text-[var(--brand)]">
                 <Sparkles className="h-4 w-4" />
                 Performance review
               </div>
-              <h2 className="brand-font mt-4 text-3xl font-semibold text-slate-900">
+              <h2 className="brand-font mt-4 text-3xl font-semibold text-[var(--ink)]">
                 Your interview feedback
               </h2>
-              <p className="mt-2 text-slate-600">
+              <p className="mt-2 text-[var(--muted)]">
                 Review your strongest moments and the areas worth refining.
               </p>
             </div>
@@ -123,19 +123,21 @@ const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
                     <div className="mt-1">{style.icon}</div>
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-lg font-semibold text-slate-900">
+                        <p className="text-lg font-semibold text-[var(--ink)]">
                           Q{idx + 1}: {qa.question}
                         </p>
-                        <span className="rounded-2xl border border-slate-200 bg-white px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-slate-500">
+                        <span className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1 text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
                           {style.label}
                         </span>
                       </div>
-                      <p className="mt-3 text-sm leading-7 text-slate-700">
-                        <span className="font-medium text-slate-900">Answer:</span>{" "}
+                      <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+                        <span className="font-medium text-[var(--ink)]">
+                          Answer:
+                        </span>{" "}
                         {qa.answer}
                       </p>
                       {qa.feedback && (
-                        <div className="prose prose-sm mt-4 max-w-none text-slate-600">
+                        <div className="prose prose-sm mt-4 max-w-none text-[var(--muted)] dark:prose-invert">
                           <ReactMarkdown>{qa.feedback}</ReactMarkdown>
                         </div>
                       )}

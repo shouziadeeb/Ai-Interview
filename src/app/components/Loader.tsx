@@ -1,8 +1,9 @@
 "use client";
+
 export default function Loader() {
   return (
-    <div className="fixed top-0 w-screen h-full flex items-center justify-center bg-white/70 backdrop-blur-sm z-50 ">
-      <div className="w-16 h-16 border-4 border-blue-500 border-dashed rounded-full animate-spin" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay)] backdrop-blur-sm">
+      <div className="h-14 w-14 animate-spin rounded-full border-4 border-dashed border-[var(--brand)]" />
     </div>
   );
 }
