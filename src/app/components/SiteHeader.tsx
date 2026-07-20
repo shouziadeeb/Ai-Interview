@@ -160,41 +160,6 @@ export default function SiteHeader() {
         </div>
       </div>
 
-      {/* Always-visible mobile account strip */}
-      {!loading && user ? (
-        <div className="border-t border-[var(--line)] bg-[var(--surface-muted)] px-4 py-2 md:hidden">
-          <div className="mx-auto flex max-w-7xl items-center gap-2.5">
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarUrl}
-                alt=""
-                className="h-8 w-8 rounded-full object-cover"
-              />
-            ) : (
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-bold text-white">
-                {initials}
-              </span>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
-                Logged in as
-              </p>
-              <p className="truncate text-sm font-semibold text-[var(--ink)]">
-                {displayName}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="shrink-0 rounded-lg border border-[var(--line)] px-2.5 py-1.5 text-xs font-semibold text-[var(--ink)]"
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       {open ? (
         <div className="border-t border-[var(--line)] bg-[var(--surface)] px-4 py-4 md:hidden">
           <div className="flex flex-col gap-3 text-sm font-medium text-[var(--ink)]">
