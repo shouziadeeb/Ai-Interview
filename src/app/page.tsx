@@ -16,6 +16,7 @@ import {
   UserRound,
 } from "lucide-react";
 import SiteShell from "./components/SiteShell";
+import ReviewsMarquee from "./components/ReviewsMarquee";
 import {
   hasUsefulAnalysis,
   mergeResumeAnalysis,
@@ -353,6 +354,8 @@ export default function Home() {
             })}
           </div>
         </section>
+
+        <ReviewsMarquee />
 
         <section
           id="about"

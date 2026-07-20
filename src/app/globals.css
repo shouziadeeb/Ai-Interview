@@ -211,3 +211,36 @@ h3,
   transition: height 80ms ease-out;
   animation: rec-bar-soft 1.2s ease-in-out infinite;
 }
+
+@keyframes review-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.review-marquee-track {
+  animation: review-marquee 55s linear infinite;
+}
+
+.review-marquee-paused {
+  animation-play-state: paused;
+}
+
+.review-marquee-mask {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 4%,
+    #000 96%,
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-marquee-track {
+    animation: none;
+  }
+}
