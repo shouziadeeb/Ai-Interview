@@ -139,10 +139,27 @@ export default function Home() {
         method: "POST",
         body: formData,
       });
-      const uploadData = await uploadRes.json();
+      const uploadRaw = await uploadRes.text();
+      let uploadData: {
+        extractedText?: string;
+        error?: string;
+        details?: string;
+        message?: string;
+      } = {};
+      try {
+        uploadData = uploadRaw ? JSON.parse(uploadRaw) : {};
+      } catch {
+        throw new Error(
+          uploadRes.ok
+            ? "Resume service returned an invalid response."
+            : `Resume upload failed (${uploadRes.status}). Please try again.`
+        );
+      }
 
       if (!uploadRes.ok) {
-        throw new Error(uploadData.details || uploadData.error || "Resume upload failed");
+        throw new Error(
+          uploadData.details || uploadData.error || "Resume upload failed"
+        );
       }
 
       const nextExtractedText = uploadData.extractedText || "";
@@ -155,15 +172,25 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: nextExtractedText }),
       });
-      const analysisData = await analysisRes.json();
+      const analysisRaw = await analysisRes.text();
+      let analysisData: Record<string, unknown> = {};
+      try {
+        analysisData = analysisRaw ? JSON.parse(analysisRaw) : {};
+      } catch {
+        analysisData = {};
+      }
 
       const localParsed = parseResumeText(nextExtractedText);
       const finalAnalysis = analysisRes.ok
-        ? mergeResumeAnalysis(analysisData, localParsed)
+        ? mergeResumeAnalysis(analysisData as ParsedResume, localParsed)
         : localParsed;
 
       if (!hasUsefulAnalysis(finalAnalysis)) {
-        throw new Error(analysisData.details || analysisData.error || "Resume analysis failed");
+        throw new Error(
+          (typeof analysisData.details === "string" && analysisData.details) ||
+            (typeof analysisData.error === "string" && analysisData.error) ||
+            "Resume analysis failed"
+        );
       }
 
       saveResumeData(nextExtractedText, finalAnalysis);

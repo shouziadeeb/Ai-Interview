@@ -46,13 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const supabase = createClient();
 
       const init = async () => {
-        const {
-          data: { user: nextUser },
-        } = await supabase.auth.getUser();
-        if (mounted) {
-          setUser(nextUser);
-          setLoading(false);
-        }
+        const [{ data: userData }, { data: sessionData }] = await Promise.all([
+          supabase.auth.getUser(),
+          supabase.auth.getSession(),
+        ]);
+        if (!mounted) return;
+        setUser(userData.user ?? sessionData.session?.user ?? null);
+        setLoading(false);
       };
 
       void init();
