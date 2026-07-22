@@ -49,3 +49,27 @@ export type InterviewEvaluation = {
     feedback: string;
   }>;
 };
+
+export type InterviewResultRecord = {
+  id: string;
+  title: string;
+  overall_score: number | null;
+  questions_answered: number;
+  duration_seconds: number | null;
+  strengths: string[];
+  feedback_summary: string | null;
+  qa_pairs: Array<{
+    question: string;
+    answer: string;
+    feedback?: string;
+  }>;
+  created_at: string;
+};
+
+export type UserInterviewStats = {
+  last_interview_at: string | null;
+  last_score: number | null;
+  best_score: number | null;
+  interviews_completed: number;
+  updated_at: string;
+};

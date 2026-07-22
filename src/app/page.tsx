@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import SiteShell from "./components/SiteShell";
 import ReviewsMarquee from "./components/ReviewsMarquee";
+import InterviewHistoryPanel from "./components/InterviewHistoryPanel";
 import {
   hasUsefulAnalysis,
   mergeResumeAnalysis,
@@ -194,7 +195,9 @@ export default function Home() {
       }
 
       saveResumeData(nextExtractedText, finalAnalysis);
-      setMessage("Resume uploaded and analyzed successfully.");
+      setMessage(
+        "Resume uploaded and analyzed successfully. You can start your mock interview now."
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unexpected error");
     } finally {
@@ -203,6 +206,7 @@ export default function Home() {
   };
 
   const hasResumeData = Boolean(extractedText || analysis);
+  const interviewHref = "/interview";
 
   return (
     <SiteShell>
@@ -221,16 +225,17 @@ export default function Home() {
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="#resume"
+                  href={hasResumeData ? interviewHref : "#resume"}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[var(--brand)] px-6 py-3 text-base font-semibold text-white transition hover:bg-[var(--brand-deep)]"
                 >
-                  Start a Free Mock Interview <ArrowRight className="h-4 w-4" />
+                  {hasResumeData ? "Start interview" : "Start a Free Mock Interview"}{" "}
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  href="/interview"
+                  href={hasResumeData ? "#resume" : interviewHref}
                   className="inline-flex items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--surface)] px-6 py-3 text-base font-semibold text-[var(--ink)] transition hover:border-[var(--brand)]"
                 >
-                  Continue practice
+                  {hasResumeData ? "Update resume" : "Continue practice"}
                 </Link>
               </div>
             </div>
@@ -251,8 +256,8 @@ export default function Home() {
         </section>
 
         <section id="resume" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="soft-panel rounded-[28px] p-7 md:p-9">
+          <div className="soft-panel overflow-hidden rounded-[28px] p-7 md:p-9">
+            <div>
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
                 Prepare
               </p>
@@ -286,7 +291,7 @@ export default function Home() {
               {message ? <p className="mt-4 text-sm text-[var(--muted)]">{message}</p> : null}
             </div>
 
-            <div className="soft-panel rounded-[28px] p-7 md:p-9">
+            <div className="mt-8 border-t border-[var(--line)] pt-8">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
@@ -314,7 +319,8 @@ export default function Home() {
                       <p className="font-semibold text-[var(--ink)]">Summary</p>
                       <div className="mt-3 space-y-2 text-sm text-[var(--ink)]">
                         <p>
-                          <span className="text-[var(--muted)]">Name:</span> {analysis?.name || "N/A"}
+                          <span className="text-[var(--muted)]">Name:</span>{" "}
+                          {analysis?.name || "N/A"}
                         </p>
                         <p>
                           <span className="text-[var(--muted)]">Skills:</span>{" "}
@@ -332,6 +338,12 @@ export default function Home() {
                         {extractedText || "No extracted text saved yet."}
                       </p>
                     </div>
+                    <Link
+                      href={interviewHref}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--brand-deep)] sm:w-auto"
+                    >
+                      Start interview <ArrowRight className="h-4 w-4" />
+                    </Link>
                   </>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--surface-muted)] p-5 text-sm leading-7 text-[var(--muted)]">
@@ -341,6 +353,10 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+          <InterviewHistoryPanel />
         </section>
 
         <section id="features" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">

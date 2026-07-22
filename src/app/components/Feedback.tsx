@@ -1,9 +1,13 @@
+"use client";
+
 import ReactMarkdown from "react-markdown";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle, Info, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useInterview } from "../context/InterviewContext";
+import { useAuth } from "../context/AuthContext";
 import SiteShell from "./SiteShell";
+import { saveInterviewResult } from "../lib/saveInterviewResult";
 
 function getFeedbackType(feedback: string) {
   if (!feedback)
@@ -46,11 +50,62 @@ interface QA {
 interface FeedbackProps {
   qaPairs: QA[];
   loading: boolean;
+  interviewTitle?: string;
+  durationSeconds?: number;
 }
 
-const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
+const Feedback = ({
+  qaPairs,
+  loading,
+  interviewTitle = "Software Engineering Interview",
+  durationSeconds,
+}: FeedbackProps) => {
   const router = useRouter();
   const { resetInterview } = useInterview();
+  const { user } = useAuth();
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error" | "skipped"
+  >("idle");
+  const [saveMessage, setSaveMessage] = useState("");
+  const savedRef = useRef(false);
+
+  useEffect(() => {
+    if (loading || !qaPairs.length || savedRef.current) return;
+
+    if (!user) {
+      setSaveStatus("skipped");
+      setSaveMessage("Sign in next time to save up to 5 interview results.");
+      return;
+    }
+
+    savedRef.current = true;
+    setSaveStatus("saving");
+
+    void saveInterviewResult({
+      title: interviewTitle,
+      qaPairs,
+      durationSeconds: durationSeconds ?? null,
+      strengths: qaPairs
+        .filter((pair) =>
+          /good|well|excellent|great|strong|impressive/i.test(pair.feedback || "")
+        )
+        .map((pair) => pair.question)
+        .slice(0, 5),
+    })
+      .then(() => {
+        setSaveStatus("saved");
+        setSaveMessage("Interview result saved to your account (keeps latest 5).");
+      })
+      .catch((error) => {
+        savedRef.current = false;
+        setSaveStatus("error");
+        setSaveMessage(
+          error instanceof Error
+            ? error.message
+            : "Could not save this interview result."
+        );
+      });
+  }, [durationSeconds, interviewTitle, loading, qaPairs, user]);
 
   const handleRedirect = () => {
     resetInterview();
@@ -102,6 +157,19 @@ const Feedback = ({ qaPairs, loading }: FeedbackProps) => {
               <p className="mt-2 text-[var(--muted)]">
                 Review your strongest moments and the areas worth refining.
               </p>
+              {saveMessage ? (
+                <p
+                  className={`mt-2 text-sm ${
+                    saveStatus === "error"
+                      ? "text-[var(--danger)]"
+                      : saveStatus === "saved"
+                        ? "text-[var(--success)]"
+                        : "text-[var(--muted)]"
+                  }`}
+                >
+                  {saveStatus === "saving" ? "Saving result…" : saveMessage}
+                </p>
+              ) : null}
             </div>
             <button
               onClick={handleRedirect}

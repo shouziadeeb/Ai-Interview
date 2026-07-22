@@ -6,6 +6,7 @@ const footerColumns = [
     links: [
       { href: "/#features", label: "Features" },
       { href: "/#resume", label: "Resume analysis" },
+      { href: "/#history", label: "Interview history" },
       { href: "/interview", label: "Mock interview" },
     ],
   },

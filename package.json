@@ -21,7 +21,8 @@
     "react-markdown": "^10.1.0",
     "typescript": "^5.0.0",
     "unpdf": "^1.6.2",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

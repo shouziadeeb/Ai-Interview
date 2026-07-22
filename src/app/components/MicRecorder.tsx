@@ -13,6 +13,12 @@ import { useState, useEffect, useRef } from "react";
 interface MicRecorderProps {
   onComplete?: (transcript: string) => void;
   currentIndex: unknown;
+  /** When true, recording controls are disabled (e.g. interviewer is speaking). */
+  disabled?: boolean;
+  /** Optional status label override while recording. */
+  listeningLabel?: string;
+  /** Notifies parent when the user is actively recording. */
+  onListeningChange?: (listening: boolean) => void;
 }
 
 function formatTimer(totalSeconds: number) {
@@ -26,6 +32,9 @@ function formatTimer(totalSeconds: number) {
 export default function MicRecorder({
   onComplete,
   currentIndex,
+  disabled = false,
+  listeningLabel = "Listening...",
+  onListeningChange,
 }: MicRecorderProps) {
   const {
     transcript,
@@ -43,15 +52,21 @@ export default function MicRecorder({
 
   const [editableTranscript, setEditableTranscript] = useState("");
   const resetTranscriptRef = useRef(resetTranscript);
+  const stopListeningRef = useRef(stopListening);
 
   useEffect(() => {
     resetTranscriptRef.current = resetTranscript;
-  }, [resetTranscript]);
+    stopListeningRef.current = stopListening;
+  }, [resetTranscript, stopListening]);
 
   useEffect(() => {
     setEditableTranscript(transcript);
     onComplete?.(transcript);
   }, [transcript, onComplete]);
+
+  useEffect(() => {
+    onListeningChange?.(isListening);
+  }, [isListening, onListeningChange]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const nextValue = e.target.value;
@@ -72,6 +87,12 @@ export default function MicRecorder({
     onComplete?.("");
   }, [currentIndex, onComplete]);
 
+  useEffect(() => {
+    if (disabled && isListening) {
+      void stopListeningRef.current();
+    }
+  }, [disabled, isListening]);
+
   const wordCount = editableTranscript.trim()
     ? editableTranscript.trim().split(/\s+/).length
     : 0;
@@ -87,7 +108,7 @@ export default function MicRecorder({
       barClass: "border-[var(--line)] bg-[var(--surface)]",
     },
     recording: {
-      title: "Recording",
+      title: listeningLabel,
       detail: "Audio is being captured now.",
       badge: "Live",
       badgeClass: "bg-[var(--danger-soft)] text-[var(--danger)]",
@@ -157,7 +178,7 @@ export default function MicRecorder({
           <button
             type="button"
             onClick={isListening ? stopListening : startListening}
-            disabled={isProcessing}
+            disabled={isProcessing || disabled}
             aria-pressed={isListening}
             aria-label={isListening ? "Stop recording" : "Start recording"}
             className={`relative z-10 flex h-10 w-10 items-center justify-center rounded-full text-white transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
@@ -194,11 +215,13 @@ export default function MicRecorder({
             </div>
           ) : (
             <p className="text-sm text-[var(--muted)]">
-              {isProcessing
-                ? "Transcribing audio…"
-                : hasAnswer
-                  ? "Record again or edit the transcript below."
-                  : "Click the mic to start recording."}
+              {disabled
+                ? "Microphone is disabled while the interviewer is speaking."
+                : isProcessing
+                  ? "Transcribing audio…"
+                  : hasAnswer
+                    ? "Record again or edit the transcript below."
+                    : "Click the mic to start recording."}
             </p>
           )}
         </div>

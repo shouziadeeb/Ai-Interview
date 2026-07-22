@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isLocalHost } from "./authUrl";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -10,6 +11,8 @@ export async function updateSession(request: NextRequest) {
   if (!url || !key) {
     return supabaseResponse;
   }
+
+  const local = isLocalHost(request.nextUrl.hostname);
 
   const supabase = createServerClient(url, key, {
     cookies: {
@@ -22,7 +25,11 @@ export async function updateSession(request: NextRequest) {
         });
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) => {
-          supabaseResponse.cookies.set(name, value, options);
+          supabaseResponse.cookies.set(name, value, {
+            ...options,
+            // http://localhost cannot store Secure cookies
+            ...(local ? { secure: false } : {}),
+          });
         });
       },
     },
@@ -43,9 +50,16 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && pathname.startsWith("/auth/login")) {
+    const nextRaw = request.nextUrl.searchParams.get("next") || "/interview";
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/interview";
+    const [pathPart, hashPart] = nextRaw.split("#");
+    const safePath =
+      pathPart && pathPart.startsWith("/") && !pathPart.startsWith("//")
+        ? pathPart
+        : "/interview";
+    redirectUrl.pathname = safePath;
     redirectUrl.search = "";
+    redirectUrl.hash = hashPart ? `#${hashPart}` : "";
     return NextResponse.redirect(redirectUrl);
   }
 

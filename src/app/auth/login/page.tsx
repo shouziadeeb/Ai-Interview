@@ -6,6 +6,7 @@ import { FormEvent, Suspense, useMemo, useState } from "react";
 import { LoaderCircle } from "lucide-react";
 import SiteShell from "../../components/SiteShell";
 import { createClient } from "../../lib/supabase/client";
+import { getBrowserAuthCallbackUrl, stashAuthNextPath } from "../../lib/supabase/authUrl";
 
 type Mode = "signin" | "signup";
 
@@ -71,11 +72,12 @@ function AuthForm() {
       const supabase = createClient();
 
       if (mode === "signup") {
+        stashAuthNextPath(nextPath);
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+            emailRedirectTo: getBrowserAuthCallbackUrl(),
           },
         });
 
@@ -118,14 +120,31 @@ function AuthForm() {
 
     try {
       const supabase = createClient();
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      stashAuthNextPath(nextPath);
+      const redirectTo = getBrowserAuthCallbackUrl();
+
+      if (process.env.NODE_ENV === "development") {
+        console.info("[auth] Google redirectTo =", redirectTo);
+      }
+
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+          // Must match Supabase Redirect URLs exactly (no ?next= query).
+          redirectTo,
+          queryParams: {
+            prompt: "select_account",
+          },
         },
       });
 
       if (oauthError) throw oauthError;
+
+      // Ensure we actually navigate with the redirect URL we requested.
+      if (data?.url) {
+        window.location.assign(data.url);
+        return;
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Google sign-in failed. Try again."
@@ -243,6 +262,31 @@ function AuthForm() {
           Back to home
         </Link>
       </p>
+
+      {process.env.NODE_ENV === "development" ? (
+        <div className="mt-4 space-y-2 rounded-lg border border-[var(--warning)]/35 bg-[var(--warning-soft)] px-3 py-2.5 text-left text-[11px] leading-5 text-[var(--ink)]">
+          <p className="font-semibold">Local Google login checklist</p>
+          <ol className="list-decimal space-y-1 pl-4 text-[var(--muted)]">
+            <li>
+              Supabase → Authentication → URL Configuration
+            </li>
+            <li>
+              Add these Redirect URLs exactly:
+              <br />
+              <code className="text-[var(--ink)]">http://localhost:3000/auth/callback</code>
+              <br />
+              <code className="text-[var(--ink)]">http://127.0.0.1:3000/auth/callback</code>
+              <br />
+              <code className="text-[var(--ink)]">http://localhost:3000/**</code>
+            </li>
+            <li>
+              For local testing, temporarily set Site URL to{" "}
+              <code className="text-[var(--ink)]">http://localhost:3000</code>{" "}
+              (otherwise unmatched redirects go to your hosted domain).
+            </li>
+          </ol>
+        </div>
+      ) : null}
     </div>
   );
 }

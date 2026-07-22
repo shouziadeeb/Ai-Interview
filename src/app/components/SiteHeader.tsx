@@ -3,15 +3,16 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Menu, UserRound, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "../context/AuthContext";
 
 const navLinks = [
-  { href: "/#features", label: "Features" },
-  { href: "/#resume", label: "Resume" },
-  { href: "/interview", label: "Practice" },
-  { href: "/#about", label: "About" },
+  { href: "/#features", label: "Features", section: "features" },
+  { href: "/#resume", label: "Resume", section: "resume" },
+  { href: "/#history", label: "History", section: "history" },
+  { href: "/interview", label: "Practice", section: null },
+  { href: "/#about", label: "About", section: "about" },
 ];
 
 function getInitials(name: string) {
@@ -33,11 +34,34 @@ function resolveDisplayName(user: NonNullable<ReturnType<typeof useAuth>["user"]
   );
 }
 
+function isNavLinkActive(
+  link: (typeof navLinks)[number],
+  pathname: string,
+  hash: string
+) {
+  if (link.href === "/interview") {
+    return pathname.startsWith("/interview");
+  }
+
+  if (pathname !== "/") return false;
+
+  const currentSection = hash.replace(/^#/, "");
+  return Boolean(link.section && currentSection === link.section);
+}
+
 export default function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const [hash, setHash] = useState("");
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading, signOut } = useAuth();
+
+  useEffect(() => {
+    const syncHash = () => setHash(window.location.hash);
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, [pathname]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -72,18 +96,27 @@ export default function SiteHeader() {
 
         <nav className="hidden items-center gap-8 text-sm font-medium text-[var(--muted)] md:flex">
           {navLinks.map((link) => {
-            const active =
-              pathname === link.href ||
-              (link.href === "/interview" && pathname.startsWith("/interview"));
+            const active = isNavLinkActive(link, pathname, hash);
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`transition hover:text-[var(--brand)] ${
-                  active ? "text-[var(--brand)]" : ""
+                aria-current={active ? "page" : undefined}
+                onClick={() => {
+                  if (link.section) setHash(`#${link.section}`);
+                  else setHash("");
+                }}
+                className={`relative transition hover:text-[var(--brand)] ${
+                  active ? "font-semibold text-[var(--brand)]" : ""
                 }`}
               >
                 {link.label}
+                {active ? (
+                  <span
+                    aria-hidden
+                    className="absolute -bottom-1 left-0 h-0.5 w-full rounded-full bg-[var(--brand)]"
+                  />
+                ) : null}
               </Link>
             );
           })}
@@ -209,16 +242,28 @@ export default function SiteHeader() {
               </div>
             )}
 
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="rounded-xl px-2 py-2 hover:bg-[var(--surface-muted)]"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const active = isNavLinkActive(link, pathname, hash);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => {
+                    if (link.section) setHash(`#${link.section}`);
+                    else setHash("");
+                    setOpen(false);
+                  }}
+                  aria-current={active ? "page" : undefined}
+                  className={`rounded-xl px-2 py-2 hover:bg-[var(--surface-muted)] ${
+                    active
+                      ? "bg-[var(--mist)] font-semibold text-[var(--brand)]"
+                      : ""
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
 
             {user ? (
               <button
